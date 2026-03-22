@@ -21,5 +21,8 @@ COPY . .
 RUN useradd -m -u 1000 botuser && chown -R botuser:botuser /app
 USER botuser
 
+ENV PYTHONUNBUFFERED=1
+ENV PTB_ASYNCIO_LOOP=1
+
 # Команда для запуска бота
 CMD ["python", "-m", "bot.main"]
