@@ -144,7 +144,7 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://${DB_USER:-autobot}:${DB_PASSWORD:-autobot123}@postgres:5432/${DB_NAME:-auto_ads}
-      API_URL: http://api:8000
+      API_URL: ${API_URL}
       MINI_APP_URL: ${MINI_APP_URL}
       BOT_TOKEN: ${BOT_TOKEN}
       ADMIN_IDS: ${ADMIN_IDS}
