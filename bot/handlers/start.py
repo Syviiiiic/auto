@@ -5,7 +5,7 @@ from database.db import get_db
 from database.queries import UserQueries
 import os
 
-MINI_APP_URL = os.getenv('MINI_APP_URL', 'http://localhost')
+MINI_APP_URL = os.getenv('MINI_APP_URL', 'http://185.56.162.203')
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /start"""
