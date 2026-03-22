@@ -3,13 +3,13 @@ import logging
 import sys
 from datetime import datetime
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
-    ConversationTypes,
+    ConversationHandler,  # ← ИСПРАВЛЕНО
     MessageHandler,
     filters,
 )
@@ -598,7 +598,7 @@ def main() -> None:
     application = Application.builder().token(config.BOT_TOKEN).build()
     
     # Add conversation handler
-    conv_handler = ConversationTypes(
+    conv_handler = ConversationHandler(  # ← ИСПРАВЛЕНО: было ConversationTypes
         entry_points=[CommandHandler("start", start)],
         states={
             MAIN_MENU: [
@@ -659,8 +659,7 @@ def main() -> None:
     
     logger.info("Bot started!")
     
-    # ⬇️ ИСПРАВЛЕНИЕ: используем run_polling() вместо asyncio.run()
-    # Это решает проблему с event loop в Docker
+    # Запуск без asyncio.run()
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
