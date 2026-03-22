@@ -7,8 +7,8 @@ class Config:
     BOT_TOKEN = os.getenv('8414611248:AAFrRRvJp1NVzAe-hz2Qi50CGNGVdf4vInE')
     ADMIN_IDS = [int(id) for id in os.getenv('ADMIN_IDS', '').split(',') if id]
     DATABASE_URL = os.getenv('DATABASE_URL')
-    API_URL = os.getenv('API_URL', 'http://localhost:8000')
-    MINI_APP_URL = os.getenv('MINI_APP_URL', 'http://localhost')
+    API_URL = os.getenv('API_URL', 'http://185.56.162.203:8000')
+    MINI_APP_URL = os.getenv('MINI_APP_URL', 'http://185.56.162.203')
     
     # Состояния для ConversationHandler
     BRAND, MODEL, YEAR, PRICE, MILEAGE = range(5)
