@@ -17,6 +17,5 @@ python-dotenv==1.0.0
 redis==5.0.1
 httpx==0.25.2
 pillow==10.1.0
-nest_asyncio==1.5.8
 requests==2.31.0
 sqlalchemy==2.0.0
