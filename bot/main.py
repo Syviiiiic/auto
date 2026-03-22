@@ -16,6 +16,9 @@ import os
 import sys
 import json
 
+import nest_asyncio
+nest_asyncio.apply()
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.db import init_db, get_db
