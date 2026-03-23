@@ -9,8 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем всё из папки bot в /app
+# Копируем bot/ в /app
 COPY bot/ .
+
+# Копируем database/ в /app/database/
+COPY database/ ./database/
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
