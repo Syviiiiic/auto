@@ -1,83 +1,107 @@
 services:
-  db:
+  postgres:
     image: postgres:15-alpine
-    container_name: autoads_db
+    container_name: auto_ads_postgres
     environment:
-      POSTGRES_DB: ${DB_NAME:-autoads}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_USER: ${DB_USER:-autobot}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-autobot123}
+      POSTGRES_DB: ${DB_NAME:-auto_ads}
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - auto_ads_network
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-autoads}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-autobot}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
-    networks:
-      - autoads_network
 
-  backend:
+  redis:
+    image: redis:7-alpine
+    container_name: auto_ads_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - auto_ads_network
+    restart: unless-stopped
+
+  api:
     build:
       context: .
       dockerfile: Dockerfile.api
-    container_name: autoads_backend
+    container_name: auto_ads_api
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-autoads}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key}
-      - DEBUG=${DEBUG:-False}
+      DATABASE_URL: postgresql://${DB_USER:-autobot}:${DB_PASSWORD:-autobot123}@postgres:5432/${DB_NAME:-auto_ads}
+      REDIS_URL: redis://redis:6379
+      BOT_TOKEN: ${BOT_TOKEN}
     ports:
       - "8000:8000"
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
-      - ./backend:/app
-      - /app/__pycache__
-    restart: unless-stopped
+      - ./api:/app/api
+      - ./database:/app/database
+      - ./logs:/app/logs
     networks:
-      - autoads_network
+      - auto_ads_network
+    restart: unless-stopped
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
-  frontend:
+  mini-app:
     build:
       context: .
       dockerfile: Dockerfile.mini-app
-    container_name: autoads_frontend
+    container_name: auto_ads_mini_app
     ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000
-      - REACT_APP_BOT_NAME=${BOT_NAME:-YourBotName}
-    depends_on:
-      - backend
-    restart: unless-stopped
+      - "80:80"
+    volumes:
+      - ./mini-app:/usr/share/nginx/html:ro
+      - ./nginx/mini-app.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - autoads_network
+      - auto_ads_network
+    restart: unless-stopped
+    depends_on:
+      - api
 
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: autoads_bot
-    env_file: .env
-    environment:
-      - BOT_TOKEN=${BOT_TOKEN}
-      - WEBAPP_URL=${WEBAPP_URL}
-      - ADMIN_IDS=${ADMIN_IDS}
-      - API_URL=http://backend:8000
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-autoads}
+    build: .
+    container_name: auto_ads_bot
     depends_on:
-      - db
-      - backend
-    restart: unless-stopped
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-autobot}:${DB_PASSWORD:-autobot123}@postgres:5432/${DB_NAME:-auto_ads}
+      API_URL: http://api:8000
+      MINI_APP_URL: ${MINI_APP_URL}
+      BOT_TOKEN: ${BOT_TOKEN}
+    volumes:
+      - ./logs:/app/logs
+      - ./bot:/app/bot
+      - ./database:/app/database
     networks:
-      - autoads_network
+      - auto_ads_network
+    restart: unless-stopped
+    command: python -m bot.main
+
+networks:
+  auto_ads_network:
+    driver: bridge
 
 volumes:
   postgres_data:
-
-networks:
-  autoads_network:
-    driver: bridge
+    name: auto_ads_postgres_data
+  redis_data:
+    name: auto_ads_redis_data
