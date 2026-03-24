@@ -1,7 +1,13 @@
+import logging
+import sys
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import logging
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from database.db import init_db
 from api.routes import auth, ads, search
 
@@ -10,17 +16,12 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting API server...")
+    logger.info("Starting API...")
     await init_db()
     yield
-    logger.info("Shutting down API server...")
+    logger.info("Shutting down API...")
 
-app = FastAPI(
-    title="Auto Ads API",
-    description="API для Telegram Mini App по продаже автомобилей",
-    version="1.0.0",
-    lifespan=lifespan
-)
+app = FastAPI(title="Auto Ads API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,10 +35,10 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(ads.router, prefix="/api/ads", tags=["ads"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 
-@app.get("/api/health")
-async def health_check():
-    return {"status": "ok", "message": "API is running"}
+@app.get("/")
+async def root():
+    return {"message": "Auto Ads API is running"}
 
-@app.get("/api/version")
-async def version():
-    return {"version": "1.0.0", "name": "Auto Ads API"}
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "message": "API is running"}
