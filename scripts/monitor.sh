@@ -54,5 +54,5 @@ df -h / | awk 'NR==1 || NR==2'
 
 # Логи ошибок за последний час
 echo -e "\n${GREEN}⚠️  Ошибки за последний час:${NC}"
-docker logs auto_ads_bot --since 1h 2>&1 | grep -i error | wc -l
+docker logs auto_ads_web --since 1h 2>&1 | grep -i error | wc -l
 docker logs auto_ads_api --since 1h 2>&1 | grep -i error | wc -l

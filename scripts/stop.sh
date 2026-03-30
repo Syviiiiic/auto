@@ -7,7 +7,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 echo -e "${YELLOW}========================================${NC}"
-echo -e "${YELLOW}   Остановка Auto Ads Bot${NC}"
+echo -e "${YELLOW}   Остановка Auto Ads${NC}"
 echo -e "${YELLOW}========================================${NC}"
 
 # Определение команды Docker Compose

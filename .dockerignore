@@ -12,6 +12,7 @@ env
 README.md
 backups/
 logs/
+uploads/
 *.log
 .vscode/
 .idea/

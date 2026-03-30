@@ -73,7 +73,7 @@ async def create_ad(
         ad = await AdQueries.create_ad(
             db,
             user_id=user['id'],
-            ad_data=ad_data.dict()
+            ad_data=ad_data.model_dump()
         )
         logger.info(f"Ad created: {ad.id} by user {user['id']}")
         return {"id": ad.id, "status": "created"}
@@ -141,6 +141,37 @@ async def get_ads(
         logger.error(f"Error getting ads: {e}")
         raise HTTPException(status_code=500, detail="Failed to get ads")
 
+
+@router.get("/me")
+async def get_my_ads(
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Объявления текущего пользователя (только после входа)."""
+    try:
+        ads = await AdQueries.get_user_ads(db, user["id"])
+        result = []
+        for ad in ads:
+            result.append({
+                "id": ad.id,
+                "brand": ad.brand,
+                "model": ad.model,
+                "year": ad.year,
+                "price": ad.price,
+                "mileage": ad.mileage,
+                "engine_type": ad.engine_type,
+                "transmission": ad.transmission,
+                "photos": json.loads(ad.photos) if ad.photos else [],
+                "is_active": ad.is_active,
+                "views_count": ad.views_count,
+                "created_at": ad.created_at,
+            })
+        return result
+    except Exception as e:
+        logger.error(f"Error getting my ads: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get my ads")
+
+
 @router.get("/{ad_id}", response_model=dict)
 async def get_ad(
     ad_id: int,
@@ -173,10 +204,11 @@ async def get_ad(
             "created_at": ad.created_at,
             "owner": {
                 "id": ad.owner.id,
-                "telegram_id": ad.owner.telegram_id,
+                "email": ad.owner.email,
+                "phone": ad.owner.phone,
                 "username": ad.owner.username,
                 "first_name": ad.owner.first_name,
-                "last_name": ad.owner.last_name
+                "last_name": ad.owner.last_name,
             }
         }
     except HTTPException:
@@ -201,7 +233,7 @@ async def update_ad(
         if ad.user_id != user['id'] and not user.get('is_admin', False):
             raise HTTPException(status_code=403, detail="Not your ad")
         
-        update_data = {k: v for k, v in ad_data.dict().items() if v is not None}
+        update_data = {k: v for k, v in ad_data.model_dump().items() if v is not None}
         
         if 'photos' in update_data and isinstance(update_data['photos'], list):
             update_data['photos'] = json.dumps(update_data['photos'])

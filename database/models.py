@@ -10,7 +10,9 @@ class User(Base):
     __tablename__ = 'users'
     
     id = Column(Integer, primary_key=True)
-    telegram_id = Column(BigInteger, unique=True, nullable=False, index=True)
+    telegram_id = Column(BigInteger, unique=True, nullable=True, index=True)
+    email = Column(String(255), unique=True, nullable=True, index=True)
+    password_hash = Column(String(255), nullable=True)
     username = Column(String(255))
     first_name = Column(String(255))
     last_name = Column(String(255))
@@ -42,7 +44,7 @@ class Ad(Base):
     drive = Column(String(50), default="Не указан")
     color = Column(String(50), default="Не указан")
     description = Column(Text, default="")
-    photos = Column(Text, default="[]")  # JSON строка с массивом file_id
+    photos = Column(Text, default="[]")  # JSON: URL изображений
     
     # Статус и статистика
     is_active = Column(Boolean, default=True)

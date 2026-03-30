@@ -39,7 +39,8 @@ services:
     environment:
       DATABASE_URL: postgresql://${DB_USER:-autobot}:${DB_PASSWORD:-autobot123}@postgres:5432/${DB_NAME:-auto_ads}
       REDIS_URL: redis://redis:6379
-      BOT_TOKEN: ${BOT_TOKEN}
+      JWT_SECRET: ${JWT_SECRET:-please-set-JWT_SECRET-in-env-file}
+      UPLOAD_DIR: /app/uploads
     ports:
       - "8000:8000"
     depends_on:
@@ -51,21 +52,22 @@ services:
       - ./api:/app/api
       - ./database:/app/database
       - ./logs:/app/logs
+      - uploads_data:/app/uploads
     networks:
       - auto_ads_network
     restart: unless-stopped
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
-  mini-app:
+  web:
     build:
       context: .
-      dockerfile: Dockerfile.mini-app
-    container_name: auto_ads_mini_app
+      dockerfile: Dockerfile.web
+    container_name: auto_ads_web
     ports:
       - "80:80"
     volumes:
-      - ./mini-app:/usr/share/nginx/html:ro
-      - ./nginx/mini-app.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx/web.conf:/etc/nginx/conf.d/default.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
     networks:
       - auto_ads_network
@@ -73,29 +75,6 @@ services:
     depends_on:
       - api
 
-  bot:
-    build: .
-    container_name: auto_ads_bot
-    depends_on:
-      postgres:
-        condition: service_healthy
-      api:
-        condition: service_started
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgresql://${DB_USER:-autobot}:${DB_PASSWORD:-autobot123}@postgres:5432/${DB_NAME:-auto_ads}
-      API_URL: http://api:8000
-      MINI_APP_URL: ${MINI_APP_URL}
-      BOT_TOKEN: ${BOT_TOKEN}
-    volumes:
-      - ./logs:/app/logs
-      - ./bot:/app/bot
-      - ./database:/app/database
-    networks:
-      - auto_ads_network
-    restart: unless-stopped
-    command: python -m bot.main
 
 networks:
   auto_ads_network:
@@ -106,3 +85,5 @@ volumes:
     name: auto_ads_postgres_data
   redis_data:
     name: auto_ads_redis_data
+  uploads_data:
+    name: auto_ads_uploads_data

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Auto Ads - Добавить объявление</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <div class="app">
@@ -28,7 +27,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Год выпуска *</label>
-                    <input type="number" id="year" required min="1900" max="2026" placeholder="2020">
+                    <input type="number" id="year" required min="1900" max="2030" placeholder="2020">
                 </div>
                 <div class="form-group">
                     <label>Цена *</label>
@@ -100,6 +99,7 @@
         </form>
     </div>
 
+    <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/add-ad.js"></script>
 </body>

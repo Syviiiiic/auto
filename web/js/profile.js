@@ -1,10 +1,11 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
-
 let user = null;
 let stats = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if (!Auth.isLoggedIn()) {
+        window.location.replace('auth.html?next=' + encodeURIComponent('profile.html'));
+        return;
+    }
     await initUser();
     await loadStats();
     renderProfile();
@@ -13,12 +14,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function initUser() {
     try {
-        const verifyResult = await api.auth.verify(tg.initData);
-        if (verifyResult.status === 'ok') {
-            user = await api.auth.me();
+        user = await api.auth.me();
+        if (!user) {
+            window.location.replace('auth.html?next=' + encodeURIComponent('profile.html'));
         }
     } catch (error) {
         console.error('Auth error:', error);
+        window.location.replace('auth.html?next=' + encodeURIComponent('profile.html'));
     }
 }
 
@@ -33,19 +35,21 @@ async function loadStats() {
 
 function renderProfile() {
     const container = document.getElementById('profileContainer');
-    
+
     if (!user) {
         container.innerHTML = '<div class="error">Ошибка загрузки профиля</div>';
         return;
     }
-    
-    const initials = user.first_name ? user.first_name.charAt(0).toUpperCase() : 'U';
-    
+
+    const initials = user.first_name ? user.first_name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U');
+    const displayName =
+        [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.email || 'Пользователь';
+
     const html = `
         <div class="profile-header">
             <div class="profile-avatar">${initials}</div>
-            <div class="profile-name">${escapeHtml(user.first_name || '')} ${escapeHtml(user.last_name || '')}</div>
-            <div class="profile-username">@${user.username || 'username'}</div>
+            <div class="profile-name">${escapeHtml(displayName)}</div>
+            <div class="profile-username">${escapeHtml(user.email || '')}</div>
         </div>
         
         <div class="stats-grid">
@@ -72,42 +76,51 @@ function renderProfile() {
                 <span>❤️ Избранное</span>
                 <span>→</span>
             </div>
-            <div class="menu-item" data-action="settings">
-                <span>⚙️ Настройки</span>
-                <span>→</span>
-            </div>
             <div class="menu-item" data-action="help">
                 <span>❓ Помощь</span>
                 <span>→</span>
             </div>
-            <div class="menu-item" data-action="contact">
-                <span>📞 Связаться с поддержкой</span>
+            <div class="menu-item" data-action="logout">
+                <span>🚪 Выйти</span>
                 <span>→</span>
             </div>
         </div>
     `;
-    
+
     container.innerHTML = html;
 }
 
 function setupEventListeners() {
-    document.querySelectorAll('.menu-item').forEach(item => {
+    const settingsBtn = document.getElementById('settingsBtn');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            window.alert('Раздел настроек будет добавлен позже.');
+        });
+    }
+
+    document.querySelectorAll('.menu-item').forEach((item) => {
         item.addEventListener('click', () => {
             const action = item.dataset.action;
             handleAction(action);
         });
     });
-    
-    // Навигация
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+
+    document.querySelectorAll('.nav-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             const pages = {
                 catalog: 'index.html',
                 add: 'add-ad.html',
                 favorites: 'favorites.html',
-                profile: 'profile.html'
+                profile: 'profile.html',
             };
-            window.location.href = pages[btn.dataset.page];
+            const pageUrl = pages[btn.dataset.page];
+            if (pageUrl) {
+                if (btn.dataset.page === 'add' && !Auth.isLoggedIn()) {
+                    window.location.href = 'auth.html?next=' + encodeURIComponent('add-ad.html');
+                    return;
+                }
+                window.location.href = pageUrl;
+            }
         });
     });
 }
@@ -120,18 +133,19 @@ function handleAction(action) {
         case 'favorites':
             window.location.href = 'favorites.html';
             break;
-        case 'settings':
-            tg.showPopup({
-                title: 'Настройки',
-                message: 'Настройки будут доступны в следующей версии',
-                buttons: [{type: 'close'}]
-            });
-            break;
         case 'help':
             window.location.href = 'help.html';
             break;
-        case 'contact':
-            tg.openTelegramLink('https://t.me/autoads_support');
+        case 'logout':
+            api.auth.logout();
+            window.location.href = 'index.html';
             break;
     }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }

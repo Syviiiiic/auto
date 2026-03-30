@@ -1,18 +1,15 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
-
 let ad = null;
 let currentPhotoIndex = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const adId = urlParams.get('id');
-    
+
     if (!adId) {
         showError('ID объявления не указан');
         return;
     }
-    
+
     await loadAd(adId);
     setupEventListeners();
 });
@@ -20,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadAd(adId) {
     const adDetail = document.getElementById('adDetail');
     adDetail.innerHTML = '<div class="loading">Загрузка объявления...</div>';
-    
+
     try {
         ad = await api.ads.getById(adId);
         renderAd();
@@ -35,22 +32,33 @@ function renderAd() {
     const price = formatPrice(ad.price);
     const mileage = formatMileage(ad.mileage);
     const date = formatDate(ad.created_at);
-    
+
     let photosHtml = '';
     if (ad.photos && ad.photos.length > 0) {
         photosHtml = `
             <div class="ad-gallery" id="gallery">
-                ${ad.photos.map((photo, index) => `
+                ${ad.photos
+                    .map(
+                        (photo, index) => `
                     <img src="${photo}" alt="Фото ${index + 1}" 
                          onclick="showFullscreen(${index})"
                          style="cursor: pointer;">
-                `).join('')}
+                `
+                    )
+                    .join('')}
             </div>
         `;
     } else {
         photosHtml = '<div class="no-photo">📷 Нет фотографий</div>';
     }
-    
+
+    const owner = ad.owner || {};
+    const sellerLine = owner.phone
+        ? `Тел.: ${escapeHtml(owner.phone)}`
+        : owner.email
+          ? `Email: ${escapeHtml(owner.email)}`
+          : 'Контакт не указан';
+
     const html = `
         ${photosHtml}
         
@@ -83,12 +91,16 @@ function renderAd() {
                 <span class="detail-label">🎨 Цвет</span>
                 <span class="detail-value">${ad.color || 'Не указан'}</span>
             </div>
-            ${ad.description ? `
+            ${
+                ad.description
+                    ? `
                 <div class="description-text">
                     <strong>📝 Описание:</strong><br>
                     ${escapeHtml(ad.description)}
                 </div>
-            ` : ''}
+            `
+                    : ''
+            }
             <div class="detail-row">
                 <span class="detail-label">👁 Просмотров</span>
                 <span class="detail-value">${ad.views_count}</span>
@@ -102,55 +114,43 @@ function renderAd() {
         <div class="seller-info">
             <div class="detail-row">
                 <span class="detail-label">👤 Продавец</span>
-                <span class="detail-value">@${ad.owner.username || ad.owner.first_name || 'Не указан'}</span>
+                <span class="detail-value">${escapeHtml([owner.first_name, owner.last_name].filter(Boolean).join(' ') || '—')}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">📇 Контакт</span>
+                <span class="detail-value">${sellerLine}</span>
             </div>
         </div>
     `;
-    
+
     adDetail.innerHTML = html;
-    
-    // Обновляем заголовок
+
     document.title = `${ad.brand} ${ad.model} - Auto Ads`;
 }
 
 function setupEventListeners() {
     document.getElementById('contactBtn').addEventListener('click', () => {
-        if (ad && ad.owner) {
-            const username = ad.owner.username;
-            if (username) {
-                tg.openTelegramLink(`https://t.me/${username}`);
-            } else {
-                tg.showPopup({
-                    title: 'Нет контакта',
-                    message: 'У продавца не указан Telegram username',
-                    buttons: [{type: 'close'}]
-                });
-            }
+        if (!ad || !ad.owner) {
+            return;
+        }
+        const o = ad.owner;
+        if (o.phone) {
+            window.location.href = `tel:${o.phone.replace(/\s/g, '')}`;
+        } else if (o.email) {
+            window.location.href = `mailto:${encodeURIComponent(o.email)}`;
+        } else {
+            window.alert('У продавца не указан телефон или email. Добавьте контакт в профиле.');
         }
     });
 }
 
 function showFullscreen(index) {
     if (!ad.photos || !ad.photos[index]) return;
-    
-    currentPhotoIndex = index;
-    tg.showPopup({
-        title: 'Фото',
-        message: 'Просмотр фото',
-        buttons: [
-            {id: 'prev', text: '◀️ Предыдущее'},
-            {id: 'next', text: 'Следующее ▶️'},
-            {id: 'close', type: 'cancel', text: 'Закрыть'}
-        ]
-    }, (buttonId) => {
-        if (buttonId === 'prev' && currentPhotoIndex > 0) {
-            currentPhotoIndex--;
-            showFullscreen(currentPhotoIndex);
-        } else if (buttonId === 'next' && currentPhotoIndex < ad.photos.length - 1) {
-            currentPhotoIndex++;
-            showFullscreen(currentPhotoIndex);
-        }
-    });
+    window.open(ad.photos[index], '_blank');
+}
+
+function showError(msg) {
+    document.getElementById('adDetail').innerHTML = `<div class="error">${escapeHtml(msg)}</div>`;
 }
 
 function escapeHtml(text) {

@@ -9,46 +9,60 @@ logger = logging.getLogger(__name__)
 
 class UserQueries:
     @staticmethod
-    async def get_or_create_user(session: AsyncSession, telegram_id: int, **kwargs) -> User:
-        """Получить пользователя или создать нового"""
-        result = await session.execute(
-            select(User).where(User.telegram_id == telegram_id)
-        )
-        user = result.scalar_one_or_none()
-        
-        if not user:
-            user = User(
-                telegram_id=telegram_id,
-                username=kwargs.get('username'),
-                first_name=kwargs.get('first_name'),
-                last_name=kwargs.get('last_name')
-            )
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
-            logger.info(f"Created new user: {telegram_id}")
-        
-        return user
-    
+    async def get_by_id(session: AsyncSession, user_id: int) -> Optional[User]:
+        result = await session.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
+
     @staticmethod
-    async def update_phone(session: AsyncSession, telegram_id: int, phone: str) -> bool:
-        """Обновить телефон пользователя"""
-        result = await session.execute(
-            update(User)
-            .where(User.telegram_id == telegram_id)
-            .values(phone=phone)
-            .returning(User.id)
+    async def get_by_email(session: AsyncSession, email: str) -> Optional[User]:
+        result = await session.execute(select(User).where(User.email == email.lower().strip()))
+        return result.scalar_one_or_none()
+
+    @staticmethod
+    async def create_user(
+        session: AsyncSession,
+        email: str,
+        password_hash: str,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+    ) -> User:
+        user = User(
+            email=email.lower().strip(),
+            password_hash=password_hash,
+            first_name=first_name,
+            last_name=last_name,
         )
+        session.add(user)
         await session.commit()
-        return result.first() is not None
-    
+        await session.refresh(user)
+        logger.info(f"Created web user: {user.id} ({user.email})")
+        return user
+
     @staticmethod
-    async def update_activity(session: AsyncSession, telegram_id: int):
-        """Обновить время последней активности"""
+    async def update_profile(
+        session: AsyncSession,
+        user_id: int,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        phone: Optional[str] = None,
+    ) -> bool:
+        values = {}
+        if first_name is not None:
+            values["first_name"] = first_name
+        if last_name is not None:
+            values["last_name"] = last_name
+        if phone is not None:
+            values["phone"] = phone
+        if not values:
+            return True
+        await session.execute(update(User).where(User.id == user_id).values(**values))
+        await session.commit()
+        return True
+
+    @staticmethod
+    async def update_activity(session: AsyncSession, user_id: int):
         await session.execute(
-            update(User)
-            .where(User.telegram_id == telegram_id)
-            .values(last_activity=func.now())
+            update(User).where(User.id == user_id).values(last_activity=func.now())
         )
         await session.commit()
 

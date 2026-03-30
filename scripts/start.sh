@@ -8,7 +8,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}   Запуск Auto Ads Bot${NC}"
+echo -e "${GREEN}   Запуск Auto Ads${NC}"
 echo -e "${GREEN}========================================${NC}"
 
 # Проверка наличия .env файла
@@ -16,7 +16,7 @@ if [ ! -f .env ]; then
     echo -e "${YELLOW}⚠ Файл .env не найден. Создаю из .env.example...${NC}"
     if [ -f .env.example ]; then
         cp .env.example .env
-        echo -e "${YELLOW}⚠ Отредактируйте .env и добавьте BOT_TOKEN${NC}"
+        echo -e "${YELLOW}⚠ Отредактируйте .env (JWT_SECRET, пароль БД и т.д.)${NC}"
         exit 1
     else
         echo -e "${RED}❌ .env.example не найден${NC}"
@@ -78,17 +78,17 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Система успешно запущена!${NC}"
     echo -e "\n${BLUE}📊 Статус контейнеров:${NC}"
     $COMPOSE_CMD ps
-    
+
     echo -e "\n${BLUE}📝 Полезные команды:${NC}"
-    echo -e "  • Просмотр логов бота: ${YELLOW}$COMPOSE_CMD logs -f bot${NC}"
-    echo -e "  • Просмотр логов API:   ${YELLOW}$COMPOSE_CMD logs -f api${NC}"
-    echo -e "  • Просмотр логов БД:    ${YELLOW}$COMPOSE_CMD logs -f postgres${NC}"
-    echo -e "  • Остановка:            ${YELLOW}$COMPOSE_CMD down${NC}"
-    echo -e "  • Перезапуск:           ${YELLOW}$COMPOSE_CMD restart${NC}"
-    echo -e "  • Подключение к БД:     ${YELLOW}docker exec -it auto_ads_postgres psql -U \${DB_USER} -d \${DB_NAME}${NC}"
-    
-    echo -e "\n${YELLOW}📋 Логи бота (Ctrl+C для выхода):${NC}"
-    $COMPOSE_CMD logs -f bot
+    echo -e "  • Просмотр логов веб (nginx): ${YELLOW}$COMPOSE_CMD logs -f web${NC}"
+    echo -e "  • Просмотр логов API:          ${YELLOW}$COMPOSE_CMD logs -f api${NC}"
+    echo -e "  • Просмотр логов БД:           ${YELLOW}$COMPOSE_CMD logs -f postgres${NC}"
+    echo -e "  • Остановка:                   ${YELLOW}$COMPOSE_CMD down${NC}"
+    echo -e "  • Перезапуск:                  ${YELLOW}$COMPOSE_CMD restart${NC}"
+    echo -e "  • Подключение к БД:          ${YELLOW}docker exec -it auto_ads_postgres psql -U \${DB_USER} -d \${DB_NAME}${NC}"
+
+    echo -e "\n${YELLOW}📋 Логи API (Ctrl+C для выхода):${NC}"
+    $COMPOSE_CMD logs -f api
 else
     echo -e "${RED}❌ Ошибка при запуске контейнеров!${NC}"
     echo -e "${YELLOW}Проверьте логи: $COMPOSE_CMD logs${NC}"

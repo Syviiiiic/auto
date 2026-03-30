@@ -1,26 +1,18 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
-
 let favorites = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await initUser();
+    if (!Auth.isLoggedIn()) {
+        window.location.replace('auth.html?next=' + encodeURIComponent('favorites.html'));
+        return;
+    }
     await loadFavorites();
     setupEventListeners();
 });
 
-async function initUser() {
-    try {
-        const verifyResult = await api.auth.verify(tg.initData);
-    } catch (error) {
-        console.error('Auth error:', error);
-    }
-}
-
 async function loadFavorites() {
     const listContainer = document.getElementById('favoritesList');
     listContainer.innerHTML = '<div class="loading">Загрузка...</div>';
-    
+
     try {
         favorites = await api.favorites.getAll();
         renderFavorites();
@@ -32,7 +24,7 @@ async function loadFavorites() {
 
 function renderFavorites() {
     const listContainer = document.getElementById('favoritesList');
-    
+
     if (!favorites || favorites.length === 0) {
         listContainer.innerHTML = `
             <div class="no-ads">
@@ -44,12 +36,12 @@ function renderFavorites() {
         `;
         return;
     }
-    
+
     let html = '';
-    favorites.forEach(ad => {
+    favorites.forEach((ad) => {
         const price = formatPrice(ad.price);
         const photo = ad.photos && ad.photos.length > 0 ? ad.photos[0] : 'assets/no-image.jpg';
-        
+
         html += `
             <div class="ad-card" data-id="${ad.id}">
                 <img src="${photo}" alt="${ad.brand} ${ad.model}" 
@@ -66,21 +58,21 @@ function renderFavorites() {
             </div>
         `;
     });
-    
+
     listContainer.innerHTML = html;
-    
-    document.querySelectorAll('.ad-card').forEach(card => {
+
+    document.querySelectorAll('.ad-card').forEach((card) => {
         card.addEventListener('click', (e) => {
             if (!e.target.classList.contains('remove-favorite')) {
                 window.location.href = `ad.html?id=${card.dataset.id}`;
             }
         });
     });
-    
-    document.querySelectorAll('.remove-favorite').forEach(btn => {
+
+    document.querySelectorAll('.remove-favorite').forEach((btn) => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const adId = parseInt(btn.dataset.id);
+            const adId = parseInt(btn.dataset.id, 10);
             await removeFavorite(adId);
         });
     });
@@ -90,31 +82,36 @@ async function removeFavorite(adId) {
     try {
         await api.favorites.remove(adId);
         await loadFavorites();
-        tg.showPopup({
-            title: 'Удалено',
-            message: 'Объявление удалено из избранного',
-            buttons: [{type: 'close'}]
-        });
     } catch (error) {
         console.error('Error removing favorite:', error);
-        tg.showPopup({
-            title: 'Ошибка',
-            message: 'Не удалось удалить',
-            buttons: [{type: 'close'}]
-        });
+        window.alert(error.message || 'Не удалось удалить');
     }
 }
 
 function setupEventListeners() {
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    document.querySelectorAll('.nav-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             const pages = {
                 catalog: 'index.html',
                 add: 'add-ad.html',
                 favorites: 'favorites.html',
-                profile: 'profile.html'
+                profile: 'profile.html',
             };
-            window.location.href = pages[btn.dataset.page];
+            const pageUrl = pages[btn.dataset.page];
+            if (pageUrl) {
+                if (btn.dataset.page === 'add' && !Auth.isLoggedIn()) {
+                    window.location.href = 'auth.html?next=' + encodeURIComponent('add-ad.html');
+                    return;
+                }
+                window.location.href = pageUrl;
+            }
         });
     });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }

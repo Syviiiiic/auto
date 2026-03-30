@@ -1,10 +1,11 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
-
 let user = null;
 let myAds = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if (!Auth.isLoggedIn()) {
+        window.location.replace('auth.html?next=' + encodeURIComponent('my-ads.html'));
+        return;
+    }
     await initUser();
     await loadMyAds();
     setupEventListeners();
@@ -12,21 +13,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function initUser() {
     try {
-        const verifyResult = await api.auth.verify(tg.initData);
-        if (verifyResult.status === 'ok') {
-            user = await api.auth.me();
+        user = await api.auth.me();
+        if (!user) {
+            window.location.replace('auth.html?next=' + encodeURIComponent('my-ads.html'));
         }
     } catch (error) {
         console.error('Auth error:', error);
+        window.location.replace('auth.html?next=' + encodeURIComponent('my-ads.html'));
     }
 }
 
 async function loadMyAds() {
     const listContainer = document.getElementById('myAdsList');
     listContainer.innerHTML = '<div class="loading">Загрузка...</div>';
-    
+
     try {
-        myAds = await api.ads.getUserAds(user.id);
+        myAds = await api.ads.getMy();
         renderMyAds();
     } catch (error) {
         console.error('Error loading ads:', error);
@@ -36,7 +38,7 @@ async function loadMyAds() {
 
 function renderMyAds() {
     const listContainer = document.getElementById('myAdsList');
-    
+
     if (!myAds || myAds.length === 0) {
         listContainer.innerHTML = `
             <div class="no-ads">
@@ -48,14 +50,14 @@ function renderMyAds() {
         `;
         return;
     }
-    
+
     let html = '';
-    myAds.forEach(ad => {
+    myAds.forEach((ad) => {
         const price = formatPrice(ad.price);
         const statusClass = ad.is_active ? 'status-active' : 'status-inactive';
         const statusText = ad.is_active ? 'Активно' : 'Скрыто';
         const photo = ad.photos && ad.photos.length > 0 ? ad.photos[0] : 'assets/no-image.jpg';
-        
+
         html += `
             <div class="my-ad-card" data-id="${ad.id}">
                 <div class="my-ad-content">
@@ -74,40 +76,24 @@ function renderMyAds() {
             </div>
         `;
     });
-    
+
     listContainer.innerHTML = html;
-    
-    // Добавляем обработчики кнопок
-    document.querySelectorAll('.edit-btn').forEach(btn => {
+
+    document.querySelectorAll('.edit-btn').forEach((btn) => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const adId = btn.dataset.id;
-            // Здесь можно открыть страницу редактирования
-            tg.showPopup({
-                title: 'Редактирование',
-                message: 'Эта функция будет доступна в следующей версии',
-                buttons: [{type: 'close'}]
-            });
+            window.alert('Редактирование в следующей версии. Пока удалите и создайте заново.');
         });
     });
-    
-    document.querySelectorAll('.delete-btn').forEach(btn => {
+
+    document.querySelectorAll('.delete-btn').forEach((btn) => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const adId = parseInt(btn.dataset.id);
-            
-            tg.showPopup({
-                title: 'Удаление',
-                message: 'Вы уверены, что хотите удалить это объявление?',
-                buttons: [
-                    {id: 'confirm', text: '✅ Да, удалить'},
-                    {id: 'cancel', type: 'cancel', text: '❌ Отмена'}
-                ]
-            }, async (buttonId) => {
-                if (buttonId === 'confirm') {
-                    await deleteAd(adId);
-                }
-            });
+            const adId = parseInt(btn.dataset.id, 10);
+            if (!window.confirm('Удалить это объявление?')) {
+                return;
+            }
+            await deleteAd(adId);
         });
     });
 }
@@ -115,19 +101,11 @@ function renderMyAds() {
 async function deleteAd(adId) {
     try {
         await api.ads.delete(adId);
-        tg.showPopup({
-            title: 'Успешно',
-            message: 'Объявление удалено',
-            buttons: [{type: 'close'}]
-        });
+        window.alert('Объявление удалено');
         await loadMyAds();
     } catch (error) {
         console.error('Error deleting ad:', error);
-        tg.showPopup({
-            title: 'Ошибка',
-            message: 'Не удалось удалить объявление',
-            buttons: [{type: 'close'}]
-        });
+        window.alert(error.message || 'Не удалось удалить объявление');
     }
 }
 
@@ -135,17 +113,30 @@ function setupEventListeners() {
     document.getElementById('addBtn').addEventListener('click', () => {
         window.location.href = 'add-ad.html';
     });
-    
-    // Навигация
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+
+    document.querySelectorAll('.nav-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             const pages = {
                 catalog: 'index.html',
                 add: 'add-ad.html',
                 favorites: 'favorites.html',
-                profile: 'profile.html'
+                profile: 'profile.html',
             };
-            window.location.href = pages[btn.dataset.page];
+            const pageUrl = pages[btn.dataset.page];
+            if (pageUrl) {
+                if (btn.dataset.page === 'add' && !Auth.isLoggedIn()) {
+                    window.location.href = 'auth.html?next=' + encodeURIComponent('add-ad.html');
+                    return;
+                }
+                window.location.href = pageUrl;
+            }
         });
     });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
