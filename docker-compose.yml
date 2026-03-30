@@ -3,9 +3,9 @@ services:
     image: postgres:15-alpine
     container_name: auto_ads_postgres
     environment:
-      POSTGRES_USER: ${DB_USER:-autobot}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-autobot123}
-      POSTGRES_DB: ${DB_NAME:-auto_ads}
+      POSTGRES_USER: ${DB_USER:-avto}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-14811481a}
+      POSTGRES_DB: ${DB_NAME:-avto_ads}
     ports:
       - "5432:5432"
     volumes:
@@ -15,7 +15,7 @@ services:
       - auto_ads_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-autobot}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-avto}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,9 +37,9 @@ services:
       dockerfile: Dockerfile.api
     container_name: auto_ads_api
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-autobot}:${DB_PASSWORD:-autobot123}@postgres:5432/${DB_NAME:-auto_ads}
+      DATABASE_URL: postgresql://${DB_USER:-avto}:${DB_PASSWORD:-14811481a}@postgres:5432/${DB_NAME:-avto_ads}
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-please-set-JWT_SECRET-in-env-file}
+      JWT_SECRET: ${JWT_SECRET:-5QY7Nnt17PEDparg6DPV4RTI8sAcYCbn}
       UPLOAD_DIR: /app/uploads
     ports:
       - "8000:8000"
