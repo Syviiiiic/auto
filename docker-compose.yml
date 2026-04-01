@@ -64,11 +64,13 @@ services:
       dockerfile: Dockerfile.web
     container_name: auto_ads_web
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./web:/usr/share/nginx/html
       - ./nginx/templates:/etc/nginx/templates
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./ssl:/etc/nginx/ssl:ro
     environment:
       - domain=avtoads.duckdns.org
       - DOMAIN=avtoads.duckdns.org
@@ -77,6 +79,8 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+      - postgres
+      - redis
 
 
 networks:
