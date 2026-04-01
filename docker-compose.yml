@@ -71,6 +71,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
       - domain=avtoads.duckdns.org
+      - DOMAIN=avtoads.duckdns.org
     networks:
       - auto_ads_network
     restart: unless-stopped
