@@ -64,7 +64,7 @@ services:
       dockerfile: Dockerfile.web
     container_name: auto_ads_web
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./web:/usr/share/nginx/html
       - ./nginx/templates:/etc/nginx/templates
