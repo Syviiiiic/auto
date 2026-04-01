@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile.api
     container_name: auto_ads_api
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-avto}:${DB_PASSWORD:-14811481a}@postgres:5432/${DB_NAME:-avto_ads}
+      DATABASE_URL: postgresql://auto:14811481a@auto_ads_postgres:5432/auto_ads
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-5QY7Nnt17PEDparg6DPV4RTI8sAcYCbn}
       UPLOAD_DIR: /app/uploads
