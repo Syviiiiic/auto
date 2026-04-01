@@ -70,7 +70,7 @@ services:
       - ./nginx/templates:/etc/nginx/templates
       - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
-      - DOMAIN=${DOMAIN}
+      - domain=avtoads.duckdns.org
     networks:
       - auto_ads_network
     restart: unless-stopped
