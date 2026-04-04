@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -5,20 +7,20 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: avto
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - auto_ads_postgres_data:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
     networks:
-      - auto_ads_network
-    restart: unless-stopped
+      - auto_auto_ads_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-avto}"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -26,9 +28,9 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - auto_ads_redis_data:/data
     networks:
-      - auto_ads_network
+      - auto_auto_ads_network
     restart: unless-stopped
 
   api:
@@ -37,26 +39,16 @@ services:
       dockerfile: Dockerfile.api
     container_name: auto_ads_api
     environment:
-      DATABASE_URL: postgresql://auto:14811481a@auto_ads_postgres:5432/auto_ads
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-5QY7Nnt17PEDparg6DPV4RTI8sAcYCbn}
-      UPLOAD_DIR: /app/uploads
-    ports:
-      - "8000:8000"
+      DATABASE_URL: postgresql://auto:14811481a@postgres:5432/avto
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
-    volumes:
-      - ./api:/app/api
-      - ./database:/app/database
-      - ./logs:/app/logs
-      - uploads_data:/app/uploads
     networks:
-      - auto_ads_network
+      - auto_auto_ads_network
     restart: unless-stopped
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
   web:
     build:
@@ -66,31 +58,16 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./web:/usr/share/nginx/html
-      - ./nginx/templates:/etc/nginx/templates
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    environment:
-      - domain=avtoads.duckdns.org
-      - DOMAIN=avtoads.duckdns.org
-    networks:
-      - auto_ads_network
-    restart: unless-stopped
     depends_on:
       - api
-      - postgres
-      - redis
-
+    networks:
+      - auto_auto_ads_network
+    restart: unless-stopped
 
 networks:
-  auto_ads_network:
+  auto_auto_ads_network:
     driver: bridge
 
 volumes:
-  postgres_data:
-    name: auto_ads_postgres_data
-  redis_data:
-    name: auto_ads_redis_data
-  uploads_data:
-    name: auto_ads_uploads_data
+  auto_ads_postgres_data:
+  auto_ads_redis_data:
