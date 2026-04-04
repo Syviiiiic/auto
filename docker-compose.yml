@@ -3,14 +3,14 @@ services:
     image: postgres:15-alpine
     container_name: auto_ads_postgres
     environment:
-      POSTGRES_USER: ${DB_USER:-avto}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-14811481a}
-      POSTGRES_DB: ${DB_NAME:-avto_ads}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: avto
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+      - ./initdb:/docker-entrypoint-initdb.d:ro
     networks:
       - auto_ads_network
     restart: unless-stopped
