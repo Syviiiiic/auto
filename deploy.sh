@@ -8,15 +8,15 @@ cd /opt/avtoads-service/auto
 
 # Останавливаем и удаляем всё
 echo "1. Очищаем старые контейнеры и тома..."
-docker-compose down -v 2>/dev/null || true
+docker compose down -v 2>/dev/null || true
 
 # Удаляем старые образы (опционально)
 echo "2. Пересобираем образы..."
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Запускаем контейнеры
 echo "3. Запускаем контейнеры..."
-docker-compose up -d
+docker compose up -d
 
 # Ждём инициализации PostgreSQL
 echo "4. Ждём инициализации базы данных (30 секунд)..."
