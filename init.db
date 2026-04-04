@@ -1,0 +1,13 @@
+cat > /opt/avtoads-service/auto/initdb/01-init.sql << 'EOF'
+-- Создаем пользователя auto
+CREATE USER IF NOT EXISTS auto WITH PASSWORD '14811481a';
+
+-- Создаем базу данных avto
+CREATE DATABASE avto;
+
+-- Даем права
+GRANT ALL PRIVILEGES ON DATABASE avto TO auto;
+
+-- Делаем auto владельцем базы
+ALTER DATABASE avto OWNER TO auto;
+EOF
