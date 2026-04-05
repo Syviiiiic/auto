@@ -3,12 +3,14 @@ version: '3.8'
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile.api
+      context: ./api
+      dockerfile: ../Dockerfile.api
     container_name: autoads_api
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:SecurePass123!@postgres:5432/avto
+      - JWT_SECRET=MySuperSecretKeyForAutoAdsProject2024
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       - postgres
       - redis
@@ -21,15 +23,12 @@ services:
     image: postgres:15-alpine
     container_name: autoads_postgres
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      - DB_USER=autobot
-      - DB_PASSWORD=autobot123
-      - DB_NAME=auto_ads
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=SecurePass123!
+      - POSTGRES_DB=avto
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     networks:
       - autoads_network
 
