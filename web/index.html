@@ -2,76 +2,85 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Ads - Каталог автомобилей</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoAds - Продажа автомобилей</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="app">
-        <header class="header">
-            <button class="menu-btn" id="menuBtn">☰</button>
-            <h1>🚗 Auto Ads</h1>
-            <button class="profile-btn" id="profileBtn">👤</button>
-        </header>
-
-        <div class="search-section">
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="🔍 Поиск по марке или модели..." autocomplete="off">
-                <button id="searchBtn">Найти</button>
-            </div>
-            
-            <button class="toggle-filters" id="toggleFilters">
-                🔽 Показать фильтры
-            </button>
-            
-            <div class="filters" id="filters" style="display: none;">
-                <select id="brandFilter">
-                    <option value="">Все марки</option>
-                </select>
-                <input type="text" id="modelFilter" placeholder="Модель">
-                <div class="filter-row">
-                    <input type="number" id="priceMin" placeholder="Цена от">
-                    <input type="number" id="priceMax" placeholder="Цена до">
-                </div>
-                <div class="filter-row">
-                    <input type="number" id="yearMin" placeholder="Год от">
-                    <input type="number" id="yearMax" placeholder="Год до">
-                </div>
-                <button id="applyFilters" class="apply-btn">Применить фильтры</button>
-            </div>
-        </div>
-
-        <div class="ads-grid" id="adsGrid">
-            <div class="loading">Загрузка...</div>
-        </div>
-
-        <div class="pagination" id="pagination">
-            <button class="prev-btn" id="prevPage" disabled>← Назад</button>
-            <span class="page-info" id="pageInfo">Страница 1</span>
-            <button class="next-btn" id="nextPage">Вперёд →</button>
-        </div>
-
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-page="catalog">
-                <span class="nav-icon">🏠</span>
-                <span>Каталог</span>
-            </button>
-            <button class="nav-btn" data-page="add">
-                <span class="nav-icon">➕</span>
-                <span>Продать</span>
-            </button>
-            <button class="nav-btn" data-page="favorites">
-                <span class="nav-icon">❤️</span>
-                <span>Избранное</span>
-            </button>
-            <button class="nav-btn" data-page="profile">
-                <span class="nav-icon">👤</span>
-                <span>Профиль</span>
-            </button>
+    <header>
+        <nav>
+            <a href="/" class="logo">AutoAds</a>
+            <ul class="nav-links">
+                <li><a href="/">Главная</a></li>
+                <li><a href="/favorites.html">Избранное</a></li>
+                <li><a href="/my-ads.html">Мои объявления</a></li>
+                <li><a href="/profile.html">Профиль</a></li>
+                <li><a href="/add-ad.html" class="btn-primary">+ Разместить</a></li>
+            </ul>
         </nav>
-    </div>
+    </header>
 
-    <script src="js/auth.js"></script>
+    <main>
+        <section class="hero">
+            <h1>Найдите свой идеальный автомобиль</h1>
+            <p>Более 10 000 проверенных объявлений от частных продавцов и дилеров</p>
+        </section>
+
+        <section class="search-section">
+            <div class="search-box">
+                <div class="search-grid">
+                    <input type="text" class="search-input" placeholder="Марка (например, BMW)" id="search-brand">
+                    <input type="text" class="search-input" placeholder="Модель" id="search-model">
+                    <input type="number" class="search-input" placeholder="Цена от" id="price-min">
+                    <input type="number" class="search-input" placeholder="Цена до" id="price-max">
+                    <input type="number" class="search-input" placeholder="Год от" id="year-min">
+                    <input type="number" class="search-input" placeholder="Год до" id="year-max">
+                </div>
+                <button class="btn-primary search-btn" onclick="searchAds()">🔍 Найти автомобиль</button>
+            </div>
+        </section>
+
+        <section class="ads-section">
+            <div class="section-header">
+                <h2>Последние объявления</h2>
+                <a href="#" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Все объявления →</a>
+            </div>
+            
+            <div id="ads-container" class="ads-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>AutoAds</h3>
+                <p>Современная платформа для покупки и продажи автомобилей. Быстро, безопасно, удобно.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Разделы</h3>
+                <a href="/">Главная</a><br>
+                <a href="/favorites.html">Избранное</a><br>
+                <a href="/add-ad.html">Разместить объявление</a>
+            </div>
+            <div class="footer-section">
+                <h3>Помощь</h3>
+                <a href="/help.html">Как продать авто</a><br>
+                <a href="/help.html">Безопасная сделка</a><br>
+                <a href="/help.html">Правила размещения</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 AutoAds. Все права защищены.</p>
+        </div>
+    </footer>
+
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
 </body>
