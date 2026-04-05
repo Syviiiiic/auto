@@ -24,7 +24,7 @@ ASYNC_DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg:/
 # Создаём асинхронный движок
 engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    echo=True,
+    echo=False,  # Отключите echo в продакшене
     poolclass=NullPool
 )
 
@@ -46,6 +46,10 @@ async def get_db():
 async def init_db():
     """Инициализация базы данных (создание таблиц)"""
     from .models import Base
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
         logger.info("Database tables created/verified")
+    except Exception as e:
+        logger.error(f"Error initializing database: {e}")
+        raise
