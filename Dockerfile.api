@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /app/api
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -9,16 +9,20 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY ../requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy application
+# Copy API code
 COPY . .
+
+# Copy database module (из корня проекта)
+COPY ../database /app/database
 
 # Create media directory
 RUN mkdir -p /app/media
 
 EXPOSE 8000
 
-# Используем python -m gunicorn вместо прямого вызова
+# Запускаем с правильным путём Python path
+ENV PYTHONPATH=/app
 CMD ["python", "-m", "gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-"]
