@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /app/api
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -8,12 +8,15 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements from parent directory
-COPY ../requirements.txt .
+# Copy requirements
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy API code
+COPY api/ .
+
+# Copy database module
+COPY database/ ../database/
 
 # Create media directory
 RUN mkdir -p /app/media
