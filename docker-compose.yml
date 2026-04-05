@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   api:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: ../Dockerfile.api  # Путь относительно context
     container_name: autoads_api
     restart: unless-stopped
     env_file:
@@ -23,6 +25,7 @@ services:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     networks:
       - autoads_network
 
@@ -34,7 +37,9 @@ services:
       - autoads_network
 
   web:
-    build: ./web
+    build:
+      context: ./web
+      dockerfile: ../Dockerfile.web  # Путь относительно context
     container_name: autoads_web
     restart: unless-stopped
     depends_on:
