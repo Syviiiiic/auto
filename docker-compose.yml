@@ -23,6 +23,10 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - DB_USER=autobot
+      - DB_PASSWORD=autobot123
+      - DB_NAME=auto_ads
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
