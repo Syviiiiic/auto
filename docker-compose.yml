@@ -1,70 +1,68 @@
+version: '3.8'
+
 services:
+  api:
+    build: ./api
+    container_name: autoads_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - autoads_network
+    volumes:
+      - ./media:/app/media
+
   postgres:
     image: postgres:15-alpine
-    container_name: auto_ads_postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
-    ports:
-      - "5432:5432"
-    volumes:
-      - auto_ads_postgres_data:/var/lib/postgresql/data
-    networks:
-      - auto_auto_ads_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    container_name: autoads_postgres
     restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - autoads_network
 
   redis:
     image: redis:7-alpine
-    container_name: auto_ads_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - auto_ads_redis_data:/data
-    networks:
-      - auto_auto_ads_network
+    container_name: autoads_redis
     restart: unless-stopped
-
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    container_name: auto_ads_api
-    environment:
-      DATABASE_URL: postgresql://auto:14811481a@postgres:5432/avto
-      REDIS_URL: redis://redis:6379/0
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
-      - auto_auto_ads_network
-    restart: unless-stopped
-    command: sh -c "sleep 5 && uvicorn api.main:app --host 0.0.0.0 --port 8000"
+      - autoads_network
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    container_name: auto_ads_web
-    ports:
-      - "80:80"
-      - "443:443"
+    build: ./web
+    container_name: autoads_web
+    restart: unless-stopped
     depends_on:
       - api
     networks:
-      - auto_auto_ads_network
-    restart: unless-stopped
+      - autoads_network
 
-networks:
-  auto_auto_ads_network:
-    driver: bridge
+  nginx:
+    image: nginx:alpine
+    container_name: autoads_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./web:/usr/share/nginx/html:ro
+      - ./media:/app/media:ro
+    depends_on:
+      - api
+      - web
+    networks:
+      - autoads_network
 
 volumes:
-  auto_ads_postgres_data:
-  auto_ads_redis_data:
+  postgres_data:
+
+networks:
+  autoads_network:
+    driver: bridge
