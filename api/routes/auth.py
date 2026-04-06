@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db import get_db
@@ -15,20 +15,14 @@ logger = logging.getLogger(__name__)
 
 class RegisterBody(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=8, max_length=72)  # Максимум 72 для bcrypt
+    password: str = Field(..., min_length=8, max_length=128)
     first_name: str | None = Field(None, max_length=255)
     last_name: str | None = Field(None, max_length=255)
-    
-    @validator('password')
-    def validate_password(cls, v):
-        if len(v.encode('utf-8')) > 72:
-            raise ValueError('Пароль слишком длинный (максимум 72 байта)')
-        return v
 
 
 class LoginBody(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=1, max_length=72)
+    password: str = Field(..., min_length=1)
 
 
 @router.post("/register")
