@@ -5,9 +5,9 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-# Используем argon2 вместо bcrypt (нет ограничения 72 байта)
+# Используем bcrypt с усечением пароля
 pwd_context = CryptContext(
-    schemes=["argon2"],
+    schemes=["bcrypt"],
     deprecated="auto"
 )
 
@@ -16,13 +16,26 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
 
+def _truncate_password(password: str) -> str:
+    """Усечение пароля до 72 байт для bcrypt"""
+    # Кодируем в UTF-8, берём первые 72 байта, декодируем обратно
+    encoded = password.encode('utf-8')
+    if len(encoded) > 72:
+        truncated = encoded[:72]
+        # Декодируем с игнорированием ошибок неполного символа
+        return truncated.decode('utf-8', errors='ignore')
+    return password
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Проверка пароля"""
+    plain_password = _truncate_password(plain_password)
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def hash_password(password: str) -> str:
     """Хеширование пароля"""
+    password = _truncate_password(password)
     return pwd_context.hash(password)
 
 
