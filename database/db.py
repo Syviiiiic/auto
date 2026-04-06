@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
+from sqlalchemy.exc import IntegrityError
 import os
 from dotenv import load_dotenv
 import logging
@@ -44,12 +45,26 @@ async def get_db():
             await session.close()
 
 async def init_db():
-    """Инициализация базы данных (создание таблиц)"""
+    """Инициализация базы данных (создание таблиц если их нет)"""
     from .models import Base
     try:
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+            # Используем checkfirst=True чтобы игнорировать существующие таблицы
+            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
         logger.info("Database tables created/verified")
+    except IntegrityError as e:
+        # Игнорируем ошибку "таблица уже существует"
+        if "already exists" in str(e).lower() or "duplicate key" in str(e).lower():
+            logger.info("Database tables already exist, skipping creation")
+        else:
+            logger.error(f"Database integrity error: {e}")
+            raise
     except Exception as e:
-        logger.error(f"Error initializing database: {e}")
-        raise
+        # Проверяем, связана ли ошибка с существованием таблиц
+        error_msg = str(e).lower()
+        if "already exists" in error_msg or "duplicate key" in error_msg:
+            logger.info("Database tables already exist, skipping creation")
+        else:
+            logger.error(f"Error initializing database: {e}")
+            # Не падаем при ошибке, просто логируем
+            # raise
