@@ -5,29 +5,24 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-# Настройка pwd_context с усечением пароля до 72 байт
+# Используем argon2 вместо bcrypt (нет ограничения 72 байта)
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__truncate_error=False  # Автоматическое усечение
+    schemes=["argon2"],
+    deprecated="auto"
 )
 
-SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key")
+SECRET_KEY = os.getenv("JWT_SECRET", "5QY7Nnt17PEDparg6DPV4RTI8sAcYCbn")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Проверка пароля"""
-    # Усечение пароля до 72 байт для bcrypt
-    plain_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def hash_password(password: str) -> str:
     """Хеширование пароля"""
-    # Усечение пароля до 72 байт для bcrypt
-    password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 
